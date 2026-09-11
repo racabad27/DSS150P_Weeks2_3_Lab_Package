@@ -1,0 +1,115 @@
+#This is where I placed the Schema for task 2.2, since it was not specified to be a filename or in a filepath.
+
+schemas:
+
+  customers:
+    source: "data/customers.csv"
+    note: 
+      CSV delivers every column as plain text. Logical types are inferred
+      from content, not from the file itself since CSV carries no schema.
+    fields:
+      - field: "customer_id"
+        source_representation: "string"
+        logical_type: "string"
+        nullable: false
+        key_role: "primary key (candidate) — currently violated in source data"
+        definition: "Surrogate identifier for a customer, following the pattern C#### such as C0001. Intended to be unique but three IDs repeat in the current source file."
+
+      - field: "first_name"
+        source_representation: "string"
+        logical_type: "string"
+        nullable: false
+        key_role: "none"
+        definition: "The customer's given name as provided at signup. Free-form text with no enforced format."
+
+      - field: "last_name"
+        source_representation: "string"
+        logical_type: "string"
+        nullable: false
+        key_role: "none"
+        definition: "The customer's family name as provided at signup. Free-form text with no enforced format."
+
+      - field: "email"
+        source_representation: "string"
+        logical_type: "string (email)"
+        nullable: true
+        key_role: "alternate key (when present)"
+        definition: "The customer's email address. Should contain exactly one @ character when not null. Currently missing for 3 customers in the source file."
+
+      - field: "city"
+        source_representation: "string"
+        logical_type: "string"
+        nullable: true
+        key_role: "none"
+        definition: "The city the customer is associated with. Currently missing for 2 customers. No standardisation enforced so casing and spelling may vary."
+
+      - field: "signup_date"
+        source_representation: "string (text in CSV)"
+        logical_type: "date (ISO-8601 YYYY-MM-DD)"
+        nullable: false
+        key_role: "none"
+        definition: "The date the customer registered. Arrives as plain text in the CSV but all 250 values parse cleanly as dates. Should be cast to a date type on load. Range in current data is 2025-01-04 to 2026-05-16."
+
+      - field: "customer_segment"
+        source_representation: "string"
+        logical_type: "category"
+        nullable: false
+        key_role: "none"
+        definition: "The business segment the customer belongs to. One of four known values: SME, Retail, Professional, or Student. Should be validated against this fixed set on ingest."
+
+  api_events:
+    source: "http://127.0.0.1:8000/api/events"
+    note: 
+      API delivers JSON where updated_at arrives as a plain string even
+      though it represents a timestamp. The metadata field is a nested
+      object within each record. Logical types reflect what these fields
+      mean, not how the JSON encodes them.
+    fields:
+      - field: "event_id"
+        source_representation: "string"
+        logical_type: "string"
+        nullable: false
+        key_role: "logical key (after deduplication only)"
+        definition: "Identifier for an event. Not unique in the raw source since E0020 and E0055 each appear twice with different updated_at values. Only becomes a reliable key after deduplication keeps the record with the greatest updated_at."
+
+      - field: "customer_id"
+        source_representation: "string"
+        logical_type: "string"
+        nullable: false
+        key_role: "foreign key (references customers.customer_id)"
+        definition: "The customer who triggered the event. References the customer_id field in the customers source, though referential integrity is not enforced at the API level."
+
+      - field: "event_type"
+        source_representation: "string"
+        logical_type: "category"
+        nullable: false
+        key_role: "none"
+        definition: "The kind of action the customer performed. One of five known values: page_view, support, add_to_cart, checkout, or payment. Represents a step in the customer journey."
+
+      - field: "amount"
+        source_representation: "float"
+        logical_type: "float"
+        nullable: false
+        key_role: "none"
+        definition: "A monetary value associated with the event. Meaning varies by event_type so a page_view amount is not the same thing as a payment amount. Units are assumed to be local currency."
+
+      - field: "updated_at"
+        source_representation: "string (ISO-8601 text in JSON)"
+        logical_type: "timestamp (ISO-8601 datetime)"
+        nullable: false
+        key_role: "watermark field"
+        definition: "The time the event record was last updated in the source system. Arrives as a plain string in the JSON response but represents a datetime and must be cast before comparison. This is the field used as the incremental watermark: on each pipeline run, only records with updated_at greater than the saved watermark are fetched."
+
+      - field: "metadata.channel"
+        source_representation: "string (nested inside metadata object)"
+        logical_type: "category"
+        nullable: false
+        key_role: "none"
+        definition: "The channel through which the event occurred. Known values include web, mobile, and partner. Nested inside the metadata object in the raw JSON and should be flattened on ingest."
+
+      - field: "metadata.campaign"
+        source_representation: "string (nested inside metadata object)"
+        logical_type: "category"
+        nullable: false
+        key_role: "none"
+        definition: "The marketing campaign associated with the event. Known values include none, retarget, and launch. The string none means no campaign was active, it is not a null value. Nested inside the metadata object in the raw JSON and should be flattened on ingest."
