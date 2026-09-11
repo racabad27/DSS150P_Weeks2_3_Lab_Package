@@ -11,10 +11,25 @@ def profile_csv(path):
     print (f'Profiling CSV file: {path} (Size: {path.stat().st_size} bytes)')
     print (f'Row count: {sum(1 for row in open(path)) - 1}')  # Excludes the headers
     print (f'Columns: {len(next(csv.reader(open(path))))}')
-    print (f'Missing value counts by column: {sum(1 for row in csv.reader(open(path)) if any(field == "" for field in row))}')
+    df = pd.read_csv(path)
+    missing = df.isnull().sum()
+    print('Missing value counts by column:')
+    for col, cnt in missing.items():
+        print(f'  {col}: {cnt}')
     print(f'Duplicate rows: {sum(1 for i, row in enumerate(csv.reader(open(path))) if row in list(csv.reader(open(path)))[:i])}')
-    print(f'Testing for customer_id_uniqueness: {len(set(row[0] for row in csv.reader(open(path)))) == sum(1 for row in csv.reader(open(path))) - 1}')
-    print (f'Inferred types: {[(field, type(field)) for field in next(csv.reader(open(path))) if field]}')
+    is_unique = df['customer_id'].is_unique
+    dup_ids = df[df['customer_id'].duplicated(keep=False)]['customer_id'].unique()
+    print(f'Testing for customer_id_uniqueness: {is_unique} — repeated IDs: {list(dup_ids)}')
+    logical_types = {col: str(dtype) for col, dtype in df.dtypes.items()}
+    logical_overrides = {'signup_date': 'date (ISO-8601)', 'customer_segment': 'category'}
+    logical_types.update(logical_overrides)
+    print(f'Inferred types: {logical_types}')
+    print('Candidate validation rules:')
+    print('  1. customer_id must be non-null and match pattern, increasing order')
+    print('  2. customer_id must be unique across all rows')
+    print('  3. email, when present, must contain exactly one @ character')
+    print('  4. signup_date must be parseable as ISO-8601 date (YYYY-MM-DD)')
+    print('  5. customer_segment must be one of: SME, Retail, Professional, Student')
     pass
 
 def profile_json(path):
