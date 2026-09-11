@@ -1,0 +1,37 @@
+source_name: "api_events"
+source_type: "rest_api"
+location_or_endpoint: "http://127.0.0.1:8000/api/events"
+owner: "N/A"
+description: 
+  Local paginated REST API serving customer event records. There are 122
+  events underneath spread across 13 pages at per_page=10. The API supports
+  an updated_after query parameter which makes incremental ingestion possible.
+  On reruns only records newer than the saved watermark need to be fetched.
+  Two event_ids (E0020 and E0055) are deliberately duplicated with different
+  updated_at values to test deduplication logic. The rule is to keep the
+  record with the greatest updated_at and discard the older one.
+record_count: 122
+schema:
+  - {field: "event_id",    type: "string",    nullable: false, notes: "logical key, duplicates exist in source so dedup is required before write"}
+  - {field: "customer_id", type: "string",    nullable: false}
+  - {field: "event_type",  type: "string",    nullable: false, notes: "page_view, support, add_to_cart, checkout, or payment"}
+  - {field: "amount",      type: "float",     nullable: false}
+  - {field: "updated_at",  type: "timestamp", nullable: false, notes: "datetime and the watermark field"}
+  - {field: "metadata",    type: "object",    nullable: false, notes: "nested object containing channel (string) and campaign (string)"}
+primary_or_candidate_key: "event_id (after deduplication, keep record with greatest updated_at)"
+update_pattern: 
+  Incremental via updated_after query parameter. The watermark is the
+  greatest updated_at value successfully persisted. On each run pass the
+  saved watermark as updated_after and only fetch records newer than it.
+  The watermark must only advance after a successful write, never before.
+known_quality_issues:
+  - "E0020 appears twice with updated_at 2026-08-03 and 2026-08-21, keep the newer one"
+  - "E0055 appears twice with updated_at 2026-08-08 and 2026-08-21, keep the newer one"
+  - "event_id alone is not enough to decide which duplicate to keep since updated_at is also required"
+  - "Fetching only page 1 returns 10 of 122 records so always follow pagination until has_more is false"
+acquisition_method: "Paginated GET loop until has_more is false, attach _ingested_at and _source to each record, deduplicate by event_id keeping max updated_at, then write to raw/api/events.jsonl"
+validation_checks:
+  - "event_id is non-null on every record"
+  - "updated_at parses as a valid ISO-8601 datetime"
+  - "no duplicate event_ids in the final deduplicated output"
+  - "watermark equals max(updated_at) across all ingested records after write"

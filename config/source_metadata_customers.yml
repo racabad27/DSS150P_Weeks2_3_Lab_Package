@@ -1,0 +1,36 @@
+source_name: "customers"
+source_type: "csv"
+location_or_endpoint: "data/customers.csv"
+owner: N/A
+description: 
+  Customer master list containing names, emails, cities, signup dates, and
+  segment labels. Has 250 rows total. Worth noting upfront that customer_id
+  is not actually unique here — three IDs repeat, and one of them (C0090)
+  points to two completely different people. Not a copy-paste accident, a
+  genuine data integrity problem. Email and city also have a handful of
+  missing values. Do not clean or remove anything from the source file.
+record_count: 250
+schema:
+  - {field: "customer_id",      type: "string",   nullable: false, notes: "2 duplicates that negates the whole column's uniqueness"}
+  - {field: "first_name",       type: "string",   nullable: false}
+  - {field: "last_name",        type: "string",   nullable: false}
+  - {field: "email",            type: "string",   nullable: true,  notes: "3 missing values"}
+  - {field: "city",             type: "string",   nullable: true,  notes: "2 missing values"}
+  - {field: "signup_date",      type: "date",     nullable: false, notes: "parsed properly"}
+  - {field: "customer_segment", type: "category", nullable: false, notes: "one of: SME, Retail, Professional, Student"}
+primary_or_candidate_key: "customer_id (intended key, but currently violated)"
+update_pattern: 
+  Full file replacement — no incremental field present. Every ingest
+  should treat this as a complete snapshot.
+known_quality_issues:
+  - "C0036 and C0145 are exact duplicate rows — same record ingested twice"
+  - "C0090 appears twice but maps to two different people — integrity violation, not a copy"
+  - "email is null for 3 customers"
+  - "city is null for 2 customers"
+acquisition_method: "Present within the original repository and cloned into the project"
+validation_checks:
+  - "customer_id matches pattern, increasing order, and is non-null"
+  - "customer_id is unique across all rows"
+  - "email contains exactly one @ when present"
+  - "signup_date parses as a valid ISO-8601 date"
+  - "customer_segment is one of the four known values"

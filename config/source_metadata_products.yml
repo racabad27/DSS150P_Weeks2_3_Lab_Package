@@ -1,0 +1,39 @@
+source_name: "products"
+source_type: "parquet"
+location_or_endpoint: "data/products.parquet"
+owner: "N/A"
+description: 
+  This is the product catalogue and it comes in Parquet format with 200 rows.
+  Each row covers a product name, category, brand, price, stock level, and
+  weight. Nothing is missing here, no nulls at all across the entire file.
+  One thing worth paying attention to is how the stock_quantity field behaves
+  depending on how you read it. Parquet stores it as int32 because that is
+  what the schema says, but if you load the same data from the CSV or JSON
+  versions pandas will quietly read it as int64 instead since those formats
+  do not carry any type information. Also worth keeping in mind that Parquet
+  is not something an operational system writes to directly. It is a format
+  for storage and analytics, so this file came from somewhere upstream and
+  should be treated as a snapshot, not a live feed.
+record_count: 200
+schema:
+  - {field: "product_id",     type: "string",  nullable: false, notes: "unique product identifier"}
+  - {field: "product_name",   type: "string",  nullable: false}
+  - {field: "category",       type: "string",  nullable: false}
+  - {field: "brand",          type: "string",  nullable: false}
+  - {field: "unit_price",     type: "float64", nullable: false}
+  - {field: "stock_quantity", type: "int32",   nullable: false, notes: "int32 in Parquet but reads as int64 from CSV or JSON"}
+  - {field: "weight_kg",      type: "float64", nullable: false}
+primary_or_candidate_key: "product_id"
+update_pattern: 
+  Full file replacement with no incremental field present. Each ingest
+  should be treated as a complete snapshot of the catalogue.
+known_quality_issues:
+  - "No nulls detected across all 200 records"
+  - "Parquet is batch and analytics only, not suitable as a live operational source"
+  - "stock_quantity dtype varies by format: int32 in Parquet but int64 when read from CSV or JSON"
+acquisition_method: "This file was copied from the upstream repository and is a snapshot of the product catalogue"
+validation_checks:
+  - "product_id is non-null and unique across all rows"
+  - "unit_price is greater than zero"
+  - "stock_quantity is a non-negative integer"
+  - "weight_kg is greater than zero"

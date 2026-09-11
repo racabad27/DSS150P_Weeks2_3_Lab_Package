@@ -1,0 +1,34 @@
+source_name: "support_tickets"
+source_type: "postgresql"
+location_or_endpoint: "postgresql://dss150p@localhost:5432/dss150p, table: support_tickets"
+owner: "N/A"
+description: 
+  Support ticket table in the lab PostgreSQL instance. Inspection only
+  in this lab so no full extraction is performed. The table has a primary
+  key on ticket_id and timestamps on both created_at and updated_at which
+  makes a CDC or watermark-based incremental strategy viable in principle.
+  assigned_agent is nullable meaning some tickets are currently unassigned.
+  Run the Task 1.6 queries to confirm exact counts before filling in
+  record_count below.
+record_count: "TODO: run SELECT COUNT(*) FROM support_tickets to confirm"
+schema:
+  - {field: "ticket_id",      type: "integer",   nullable: false, notes: "primary key"}
+  - {field: "customer_id",    type: "string",    nullable: true}
+  - {field: "subject",        type: "string",    nullable: true}
+  - {field: "status",         type: "string",    nullable: true}
+  - {field: "assigned_agent", type: "string",    nullable: true,  notes: "null means unassigned, confirm count with WHERE assigned_agent IS NULL"}
+  - {field: "created_at",     type: "timestamp", nullable: true}
+  - {field: "updated_at",     type: "timestamp", nullable: true,  notes: "candidate watermark field for incremental strategy"}
+primary_or_candidate_key: "ticket_id"
+update_pattern: 
+  updated_at is present and suitable for a watermark or CDC strategy
+  but this is inspection only in the current lab. Full incremental
+  design is discussed in Task 2.4.
+known_quality_issues:
+  - "assigned_agent is nullable and exact null count needs confirming via SQL"
+  - "other nullable columns need null counts pulled from a live query before this record is considered complete"
+acquisition_method: "Inspection only in this lab with bounded queries, no full-table extraction and no destructive statements"
+validation_checks:
+  - "ticket_id is non-null and unique"
+  - "created_at is non-null and parses as a valid timestamp"
+  - "updated_at is greater than or equal to created_at where both are present"

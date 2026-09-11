@@ -1,0 +1,35 @@
+source_name: "orders"
+source_type: "json"
+location_or_endpoint: "data/orders.json"
+owner: "N/A"
+description: 
+  Order records exported as a JSON array — 250 records, root is a list
+  (confirmed). Each record has order details, amounts, and a nested shipping
+  object that carries the region and delivery method. No nulls anywhere in
+  this file, which is actually a bit unusual and worth keeping in mind.
+  The nested shipping field will need a decision before loading into anything
+  tabular flatten it or split it into a child table.
+record_count: 250
+schema:
+  - {field: "order_id",        type: "string",    nullable: false, notes: "unique order identifier"}
+  - {field: "customer_id",     type: "string",    nullable: false, notes: "references customers.customer_id"}
+  - {field: "order_timestamp", type: "timestamp", nullable: false, notes: "datetime"}
+  - {field: "status",          type: "string",    nullable: false, notes: "Packed, Delivered, Cancelled, or Pending"}
+  - {field: "item_count",      type: "integer",   nullable: false}
+  - {field: "subtotal",        type: "float",     nullable: false}
+  - {field: "shipping_fee",    type: "float",     nullable: false}
+  - {field: "total_amount",    type: "float",     nullable: false}
+  - {field: "shipping",        type: "object",    nullable: false, notes: "nested object with region (string) and method (string)"}
+primary_or_candidate_key: "order_id"
+update_pattern: 
+  Full file replacement, no updated_at or change indicator present.
+  Treat every ingest as a complete snapshot.
+known_quality_issues:
+  - "No nulls or missing keys found across all 250 records"
+  - "Nested shipping object needs flattening or normalisation before any tabular load"
+acquisition_method: "Gotten from the respective repository"
+validation_checks:
+  - "order_id matches pattern scaling order and is non-null"
+  - "order_timestamp parses as a valid ISO-8601 datetime"
+  - "total_amount equals subtotal + shipping_fee for every record"
+  - "shipping.region and shipping.method are both present and non-null"
