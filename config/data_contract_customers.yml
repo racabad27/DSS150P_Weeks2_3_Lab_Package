@@ -1,18 +1,47 @@
 dataset: customers
-owner: "TODO"
+owner: "N/A"
 source_type: csv
 primary_key: customer_id
 delivery:
-  cadence: "TODO"
+  cadence: "Full file replacement — no incremental field present. Every ingest
+    should treat this as a complete snapshot."
 fields:
   - name: customer_id
     type: string
     nullable: false
     unique: true
+  - name: first_name
+    type: string
+    nullable: false
+    unique: false
+  - name: last_name
+    type: string
+    nullable: false
+    unique: false
   - name: email
     type: string
     nullable: true
+    unique: true
+  - name: city
+    type: string
+    nullable: true
+    unique: false
+  - name: signup_date
+    type: date
+    nullable: false
+    unique: false
+  - name: customer_segment
+    type: category
+    nullable: false
+    unique: false
 quality_rules:
-  - "TODO: define at least 5 rules"
+  - "customer_id must be non null and unique across all rows"
+  - "customer_id must be increasing order and match the pattern C####"
+  - "email must contain exactly one @ character when present"
+  - "signup_date must parse as a valid ISO-8601 date"
+  - "customer_segment must be one of the four known values: SME, Retail, Professional, Student"
+  - "no duplicate rows in the source file"
+  - "total row countr must be greater than 0"
 change_policy:
-  schema_change_notice: "TODO"
+  schema_change_notice: "Changes in the fields like names, types, or allowed values must be communicated and informed to respective groups when delivering."
+  
