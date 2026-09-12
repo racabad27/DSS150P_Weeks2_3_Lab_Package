@@ -1,2 +1,3 @@
 Explain why processing only page 1 would be an incomplete ingestion.
 - Simply because it is 1 page out of the 10 pages that are contained within the API. It is like reading the book in the beginning without getting full context of the rest of the chapters, all the way to the end. This can help provide better decision-making and give clearer context to what we are dealing with.
+

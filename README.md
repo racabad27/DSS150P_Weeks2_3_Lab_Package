@@ -12,3 +12,6 @@ Start with the Word laboratory guide. This repository is intentionally incomplet
 7. Terminal B: complete/run profiling and ingestion scripts.
 
 Do not commit `.env`, generated raw data, or watermark state unless specifically instructed.
+
+
+## For full transparency, AI was heavily used in the syntax parts from tasks 1.x to 3.x. However, interpretations and essays were done strictly based of given results and were done manually.
