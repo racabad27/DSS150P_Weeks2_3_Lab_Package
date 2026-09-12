@@ -3,3 +3,11 @@ run_id,started_at,finished_at,status,source,records_read,records_written,duplica
 cf51ce3f-8307-49e0-959b-dcb5b3fd0887,2026-09-12T14:04:10.481621+00:00,2026-09-12T14:04:10.482876+00:00,success,orders.json,1,1,0,,,
 1125679b-0cef-456b-895c-f3169dec2207,2026-09-12T14:04:10.483150+00:00,2026-09-12T14:04:10.484531+00:00,success,products.parquet,1,1,0,,,
 98452ba1-331a-4af4-8996-ca6c32a7aec4,2026-09-12T14:04:10.484770+00:00,2026-09-12T14:04:10.548437+00:00,success,api_events,122,120,2,,2026-08-21T10:00:00,
+7cf47d79-f21a-4991-9ee1-be605de468d3,2026-09-12T14:07:00.798770+00:00,2026-09-12T14:07:00.799229+00:00,skipped,customers.csv,0,0,0,,,duplicate hash
+f0697b43-b95e-4abf-9df1-63eeacdad97a,2026-09-12T14:07:00.799551+00:00,2026-09-12T14:07:00.799991+00:00,skipped,orders.json,0,0,0,,,duplicate hash
+57ac8761-704c-45ce-8bea-a58c7aa92054,2026-09-12T14:07:00.800262+00:00,2026-09-12T14:07:00.800652+00:00,skipped,products.parquet,0,0,0,,,duplicate hash
+2f4a8835-cda0-4311-8d04-edffff8c55a3,2026-09-12T14:07:00.800910+00:00,2026-09-12T14:07:02.842127+00:00,failed,api_events,0,0,0,2026-08-21T10:00:00,2026-08-21T10:00:00,"HTTPConnectionPool(host='127.0.0.1', port=8000): Max retries exceeded with url: /api/events?page=1&per_page=20&updated_after=2026-08-21T10%3A00%3A00 (Caused by NewConnectionError(""HTTPConnection(host='127.0.0.1', port=8000): Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it""))"
+2b8e4cef-d916-46c3-a7b4-99901c86d530,2026-09-12T14:08:02.677636+00:00,2026-09-12T14:08:02.678063+00:00,skipped,customers.csv,0,0,0,,,duplicate hash
+1c971e51-1eec-4dc6-9ac8-ceea0468e354,2026-09-12T14:08:02.678359+00:00,2026-09-12T14:08:02.678800+00:00,skipped,orders.json,0,0,0,,,duplicate hash
+ab1a897c-da0f-49a0-b45f-1872a494fac9,2026-09-12T14:08:02.679045+00:00,2026-09-12T14:08:02.679427+00:00,skipped,products.parquet,0,0,0,,,duplicate hash
+abb3c45a-2253-4b13-8b24-faae245e13a1,2026-09-12T14:08:02.679664+00:00,2026-09-12T14:08:02.682340+00:00,success,api_events,0,0,0,2026-08-21T10:00:00,2026-08-21T10:00:00,
