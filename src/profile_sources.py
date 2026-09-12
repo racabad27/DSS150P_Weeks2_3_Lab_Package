@@ -43,19 +43,44 @@ def profile_json(path):
     print(f'Date/time fields: {[(k, v) for k, v in data[0].items() if isinstance(v, str) and v.count("-") == 2 and v.count(":") == 2] if data else []}')
     print(f'Identified numeric fields: {[(k, v) for k, v in data[0].items() if isinstance(v, (int, float))] if data else []}')
     print(f"Nulls and missing keys: {[(i, {k: record.get(k) for k in set().union(*(item.keys() for item in data)) if k not in record or record[k] is None}) for i, record in enumerate(data) if any(k not in record or record[k] is None for k in set().union(*(item.keys() for item in data)))] if data else []}")
+    print('Two downstream representations for the nested shipping object:')
+    print('  Option A - Flatten: add shipping_region and shipping_method as top-level columns.')
+    print('    Pro: simple tabular format, works directly in SQL/CSV.')
+    print('    Con: adds columns, breaks if shipping gains new sub-fields.')
+    print('  Option B - Separate child table keyed on order_id.')
+    print('    Pro: normalised, extensible without touching the parent schema.')
+    print('    Con: requires a JOIN to query order and shipping together.')
     pass
 
 def profile_parquet(path):
-    # TODO: use pandas.read_parquet; report rows/columns/dtypes/nulls and file size
-    # Requires pyarrow from requirements.txt
-    pass
     df = pd.read_parquet(path)
     print(f'Profiling Parquet file: {path} (Size: {path.stat().st_size} bytes)')
     print(f'Rows: {len(df)}')
     print(f'Columns: {list(df.columns)}')
     print(f'Data types: {df.dtypes.to_dict()}')
     print(f'Nulls: {df.isnull().sum().to_dict()}')
-    pass
+
+    csv_path  = path.parent / 'products_optional_compare.csv'
+    json_path = path.parent / 'products_optional_compare.json'
+    df_csv    = pd.read_csv(csv_path)
+    df_json   = pd.read_json(json_path)
+    print('File size comparison (same 200-row dataset):')
+    print(f'  parquet : {path.stat().st_size:,} bytes')
+    print(f'  csv     : {csv_path.stat().st_size:,} bytes')
+    print(f'  json    : {json_path.stat().st_size:,} bytes')
+    print('  Note: parquet larger than CSV here — compression pays off at scale, not 200 rows.')
+    print('Type preservation (stock_quantity):')
+    print(f'  parquet: {df["stock_quantity"].dtype} | csv: {df_csv["stock_quantity"].dtype} | json: {df_json["stock_quantity"].dtype}')
+    print('  Parquet preserves int32 exactly; CSV and JSON carry no schema so pandas infers int64.')
+    print('Schema behaviour comparison:')
+    print('  CSV    : no embedded schema; types inferred by pandas, can be wrong.')
+    print('  JSON   : no embedded schema; types inferred per field, silent coercion possible.')
+    print('  Parquet: schema in file footer (Arrow/Thrift) — types guaranteed on read.')
+    print('Why Parquet is not a common operational source format:')
+    print('  Parquet is columnar, immutable, batch-oriented — no row-level inserts/updates/deletes.')
+    print('  Operational systems produce real-time transactions Parquet cannot receive.')
+    print('  Requires a runtime (pandas/Spark/DuckDB) to decode — not native to apps or terminals.')
+
 
 if __name__=='__main__':
     profile_csv(DATA_DIR/'customers.csv')
